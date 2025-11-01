@@ -32,7 +32,7 @@ export async function onRequest(context) {
         }
 
         // --- Gemini API へのリクエスト ---
-        const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
+        const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
         
         // AIへの指示 (プロンプト)
         const prompt = `あなたはインターネットスラングの専門家です。以下の「Leet語（1337 speak）」を、文脈を推測して自然な英語に翻訳してください。翻訳結果だけを返してください。

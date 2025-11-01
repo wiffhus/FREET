@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FREET</title>
+    <style>
+        body {
+            background-color: #e0e0e0; /* 昔っぽい背景色 */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                         "Helvetica Neue", "Arial", sans-serif; /* モダンなフォントにしつつ雰囲気を */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* ウィンドウ全体のコンテナ */
+        .window {
+            width: 700px;
+            background-color: #f0f0f0;
+            border: 2px solid #333;
+            border-radius: 8px;
+            box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        /* タイトルバー */
+        .title-bar {
+            background-color: #ccc;
+            border-bottom: 2px solid #333;
+            padding: 5px 10px;
+            text-align: center;
+            font-weight: bold;
+            cursor: default; /* ドラッグできない感じ */
+            user-select: none;
+        }
+
+        /* ウィンドウの中身 */
+        .content {
+            padding: 20px;
+        }
+
+        .translator-group {
+            display: flex;
+            gap: 20px;
+        }
+
+        .box {
+            width: 50%;
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 18px;
+            border-bottom: 1px solid #aaa;
+            padding-bottom: 5px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            box-sizing: border-box; /* paddingを含めて幅100% */
+            padding: 8px;
+            border: 1px solid #999;
+            border-radius: 4px;
+            font-size: 16px;
+            background-color: #fff;
+        }
+
+        button {
+            padding: 8px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            background-color: #ddd;
+            border: 1px solid #888;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #ccc;
+        }
+        button:active {
+            background-color: #bbb;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="window">
+        <div class="title-bar">
+            FREET (1337 Translator)
+        </div>
+        <div class="content">
+            <div class="translator-group">
+                <div class="box">
+                    <h2>English -> 1337</h2>
+                    <textarea id="englishInput" placeholder="Enter English here..."></textarea>
+                    <button onclick="toLeet()">Translate</button>
+                    <textarea id="leetOutput" placeholder="1337 output..." readonly></textarea>
+                </div>
+
+                <div class="box">
+                    <h2>1337 -> English (AI)</h2>
+                    <textarea id="leetInput" placeholder="Enter 1337 here..."></textarea>
+                    <button onclick="fromLeet()" id="aiButton">Translate (AI)</button>
+                    <textarea id="englishOutput" placeholder="AI translation..." readonly></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. 英語 -> Leet語 (簡易JS版)
+        const toLeetMap = {
+            'a': '4', 'b': '8', 'e': '3', 'g': '6', 'i': '1', 'o': '0', 's': '5', 't': '7',
+            'l': '1', 'z': '2', 'f': 'ph', 'c': '(', 'k': 'x'
+        };
+        function toLeet() {
+            let input = document.getElementById('englishInput').value.toLowerCase();
+            let output = '';
+            for (let char of input) {
+                output += toLeetMap[char] || char;
+            }
+            document.getElementById('leetOutput').value = output;
+        }
+
+        // 2. Leet語 -> 英語 (AI版 - /api/chat を呼び出す)
+        async function fromLeet() {
+            let input = document.getElementById('leetInput').value;
+            let outputArea = document.getElementById('englishOutput');
+            let button = document.getElementById('aiButton');
+
+            if (!input) {
+                outputArea.value = "Please enter 1337 text first.";
+                return;
+            }
+
+            // 処理中にボタンを無効化
+            button.disabled = true;
+            button.textContent = "Translating...";
+            outputArea.value = "AI is thinking...";
+
+            try {
+                // /api/chat にリクエストを送信
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: input }), // 入力テキストをJSONで送る
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // AIの翻訳結果をセット
+                outputArea.value = data.translation || "Sorry, AI couldn't translate this.";
+
+            } catch (error) {
+                console.error('Error:', error);
+                outputArea.value = `Error: ${error.message}`;
+            } finally {
+                // ボタンを元に戻す
+                button.disabled = false;
+                button.textContent = "Translate (AI)";
+            }
+        }
+    </script>
+
+</body>
+</html>
